@@ -88,7 +88,74 @@ class MazeGUI:
                                              (x + 1) * cell_size, (y + 1) * cell_size,
                                              fill=color, outline='black')
     def run_a_star(self):
+        MazeGUI.reset(self)
 
+        def heuristic(node):
+            # Manhattan distance (heuristic cost) task 3
+            return abs(node[0] - self.goal_node[0]) + abs(
+                node[1] - self.goal_node[1])  # absolute difference between the x and y coordinates
+
+        def a_star():
+            time_taken = 0
+            priority_queue = PriorityQueue()  # The priority queue helps in selecting the node with the lowest total cost (total_cost)
+            start_cost = 0 + heuristic(self.start_node)
+            priority_queue.put((start_cost, 0, self.start_node, []))  # (total_cost, cost_so_far, current_node, path)
+
+            visited = set()
+
+            while not priority_queue.empty():
+                total_cost, cost_so_far, current_node, path = priority_queue.get()
+
+                if current_node == self.goal_node:
+                    print()
+                    print("Goal reached!")
+                    path = path + [current_node]
+                    cell_size = self.canvas_size // len(self.maze[0])
+                    number = 0
+                    for n in path[1:-1]:  # coloring the path
+                        x, y = n
+                        cell_type = self.maze[y][x]
+                        color = 'purple'
+                        number += 1
+                        self.canvas.create_rectangle(x * cell_size, y * cell_size,
+                                                     (x + 1) * cell_size, (y + 1) * cell_size,
+                                                     fill=color, outline='black')
+                        self.canvas.create_text((x + 0.5) * cell_size, (y + 0.5) * cell_size,
+                                                text=str(number), fill='black')
+                    print(time_taken, "minutes have taken to find the goal node using A*")
+                    print(len(path) - 1, ": this is the path length")
+                    return
+
+                visited.add(current_node)
+
+                neighbors = [
+                    (current_node[0] - 1, current_node[1] - 1),  # Left-Up middle
+                    (current_node[0] - 1, current_node[1]),  # Left
+                    (current_node[0] - 1, current_node[1] + 1),  # Left-Down middle
+                    (current_node[0], current_node[1] - 1),  # Up
+                    (current_node[0], current_node[1] + 1),  # Down
+                    (current_node[0] + 1, current_node[1] - 1),  # Up-Right middle
+                    (current_node[0] + 1, current_node[1]),  # Right
+                    (current_node[0] + 1, current_node[1] + 1)  # Right-Down middle
+                ]
+
+                for neighbor in neighbors:
+                    if (
+                            0 <= neighbor[
+                        0] < self.width  # Ensures that the x-coordinate of the neighbor is within the valid range of the maze
+                            and 0 <= neighbor[
+                        1] < self.height  # Ensures that the y-coordinate of the neighbor is within the valid range of the maze
+                            and neighbor not in visited  # Ensures that the neighbor has not been visited before to avoid revisiting the same node
+                            and self.maze[neighbor[1]][neighbor[0]] != "B"
+                    # Ensures that the neighbor is not a barrier node
+                    ):
+                        time_taken += 1
+                        new_cost_so_far = cost_so_far + 1  # in the next step which means after this for loop ends the new_cost_so_far becomes cost_so_far
+                        total_cost = new_cost_so_far + heuristic(neighbor)
+                        priority_queue.put((total_cost, new_cost_so_far, neighbor,
+                                            path + [current_node]))  # (total_cost, cost_so_far, current_node, path)
+
+        a_star()
         print("Running A* algorithm")
 
     def run_dfs(self):
